@@ -1,4 +1,4 @@
-package com.example.macaoai.auth
+package ai.macao.app.auth
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,6 +20,7 @@ private enum class AuthRoute {
 @Composable
 fun AuthFlow(
     start: AuthEntry,
+    onAuthSuccess: () -> Unit = {},
     onExit: () -> Unit = {},
 ) {
     var route by remember {
@@ -30,28 +31,24 @@ fun AuthFlow(
             },
         )
     }
-    var emailForOtp by remember { mutableStateOf("") }
 
     when (route) {
         AuthRoute.SignUp -> SignUpScreen(
             onBack = onExit,
-            onContinue = { email ->
-                emailForOtp = email
-                route = AuthRoute.Otp
-            },
+            onSignUpSuccess = onAuthSuccess,
             onNavigateToSignIn = { route = AuthRoute.SignIn },
         )
 
         AuthRoute.SignIn -> SignInScreen(
-            onSignIn = { /* UI only */ },
-            onForgotPassword = { /* UI only */ },
+            onSignInSuccess = onAuthSuccess,
+            onForgotPassword = { /* Handled inside SignInScreen */ },
             onNavigateToSignUp = { route = AuthRoute.SignUp },
         )
 
         AuthRoute.Otp -> OtpSetupScreen(
-            initialEmail = emailForOtp,
+            initialEmail = "",
             onBack = { route = AuthRoute.SignUp },
-            onSendOtp = { /* UI only */ },
+            onSendOtp = { /* Handled inside OtpSetupScreen */ },
         )
     }
 }

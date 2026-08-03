@@ -1,10 +1,9 @@
-package com.example.macaoai.auth
+package ai.macao.app.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,28 +18,37 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.macaoai.R
+import ai.macao.app.R
 
 @Composable
 fun SignInScreen(
-    onSignIn: () -> Unit = {},
+    onSignInSuccess: () -> Unit = {},
     onForgotPassword: () -> Unit = {},
     onNavigateToSignUp: () -> Unit = {},
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var statusMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -70,7 +78,10 @@ fun SignInScreen(
 
         AuthEmailField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                errorMessage = null
+            },
             showTrailingChevron = true,
             modifier = Modifier.padding(horizontal = 28.dp),
         )
@@ -79,23 +90,80 @@ fun SignInScreen(
 
         AuthPasswordField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                errorMessage = null
+            },
             passwordVisible = passwordVisible,
             onToggleVisibility = { passwordVisible = !passwordVisible },
             modifier = Modifier.padding(horizontal = 28.dp),
         )
 
+        if (errorMessage != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = errorMessage!!,
+                color = Color(0xFFB3261E),
+                fontSize = 13.sp,
+                fontFamily = AuthInterFontFamily,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 28.dp),
+            )
+        }
+
+        if (statusMessage != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = statusMessage!!,
+                color = Color(0xFF2E7D32),
+                fontSize = 13.sp,
+                fontFamily = AuthInterFontFamily,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 28.dp),
+            )
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
 
         MacaoPrimaryButton(
-            text = "Sign In",
-            onClick = onSignIn,
+            text = if (isLoading) "Signing In..." else "Sign In",
+            onClick = {
+                if (isLoading) return@MacaoPrimaryButton
+                isLoading = true
+                errorMessage = null
+                statusMessage = null
+                FirebaseAuthHelper.signInWithEmail(
+                    email = email,
+                    password = password,
+                    onSuccess = {
+                        isLoading = false
+                        onSignInSuccess()
+                    },
+                    onError = { err ->
+                        isLoading = false
+                        errorMessage = err
+                    },
+                )
+            },
             modifier = Modifier.padding(horizontal = 28.dp),
         )
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        SocialLoginRow()
+        SocialLoginRow(
+            onGoogleClick = {
+                errorMessage = null
+                statusMessage = null
+                FirebaseAuthHelper.launchGoogleSignIn(
+                    context = context,
+                    scope = coroutineScope,
+                    onSuccess = onSignInSuccess,
+                    onError = { err -> errorMessage = err },
+                )
+            },
+        )
 
         Spacer(modifier = Modifier.height(40.dp))
 
@@ -112,7 +180,18 @@ fun SignInScreen(
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
-                    onClick = onForgotPassword,
+                    onClick = {
+                        errorMessage = null
+                        statusMessage = null
+                        FirebaseAuthHelper.sendPasswordResetEmail(
+                            email = email,
+                            onSuccess = {
+                                statusMessage = "Password reset email sent to $email."
+                            },
+                            onError = { err -> errorMessage = err },
+                        )
+                        onForgotPassword()
+                    },
                 ),
         )
 

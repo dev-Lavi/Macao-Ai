@@ -1,5 +1,9 @@
-package com.example.macaoai.onboarding
+package ai.macao.app.onboarding
 
+import ai.macao.app.R
+import ai.macao.app.auth.AuthEntry
+import ai.macao.app.auth.AuthFlow
+import ai.macao.app.auth.ClashGroteskFontFamily
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -19,14 +23,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.googlefonts.Font
 import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.macaoai.R
-import com.example.macaoai.auth.AuthEntry
-import com.example.macaoai.auth.AuthFlow
 
 // ─── Google Font provider ───────────────────────────────────────────────────
 
@@ -38,7 +40,7 @@ private val provider = GoogleFont.Provider(
 
 private val InterFontName = GoogleFont("Inter")
 
-private val InterFontFamily = androidx.compose.ui.text.font.FontFamily(
+private val InterFontFamily = FontFamily(
     Font(googleFont = InterFontName, fontProvider = provider, weight = FontWeight.Normal),
     Font(googleFont = InterFontName, fontProvider = provider, weight = FontWeight.SemiBold),
     Font(googleFont = InterFontName, fontProvider = provider, weight = FontWeight.Bold),
@@ -81,12 +83,17 @@ val onboardingPages = listOf(
 // ─── Root onboarding composable ──────────────────────────────────────────────
 
 @Composable
-fun OnboardingScreen(onGetStarted: () -> Unit = {}) {
+fun OnboardingScreen(
+    onGetStarted: () -> Unit = {},
+    onAlreadyHaveAccount: () -> Unit = {},
+    onAuthSuccess: () -> Unit = {},
+) {
     var authEntry by remember { mutableStateOf<AuthEntry?>(null) }
 
     if (authEntry != null) {
         AuthFlow(
             start = authEntry!!,
+            onAuthSuccess = onAuthSuccess,
             onExit = { authEntry = null },
         )
         return
@@ -113,7 +120,10 @@ fun OnboardingScreen(onGetStarted: () -> Unit = {}) {
                         authEntry = AuthEntry.SignUp
                         onGetStarted()
                     },
-                    onAlreadyHaveAccount = { authEntry = AuthEntry.SignIn },
+                    onAlreadyHaveAccount = {
+                        authEntry = AuthEntry.SignIn
+                        onAlreadyHaveAccount()
+                    },
                 )
             }
         }
@@ -225,7 +235,7 @@ fun OnboardingPageContent(page: OnboardingPageData) {
                     text       = page.title,
                     fontSize   = 30.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    fontFamily = com.example.macaoai.auth.ClashGroteskFontFamily,
+                    fontFamily = ClashGroteskFontFamily,
                     color      = ColorDarkText,
                     lineHeight = 38.sp,
                     modifier   = Modifier.padding(bottom = 16.dp),

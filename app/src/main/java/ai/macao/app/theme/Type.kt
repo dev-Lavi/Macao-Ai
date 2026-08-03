@@ -1,4 +1,4 @@
-package com.example.macaoai.ui.theme
+package ai.macao.app.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

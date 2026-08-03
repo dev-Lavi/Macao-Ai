@@ -1,4 +1,4 @@
-package com.example.macaoai.auth
+package ai.macao.app.auth
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.ui.zIndex
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,18 +38,17 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.googlefonts.Font
 import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.macaoai.R
+import ai.macao.app.R
 
 // ─── Google Font ─────────────────────────────────────────────────────────────
 
@@ -62,7 +60,7 @@ private val provider = GoogleFont.Provider(
 
 private val InterFontName = GoogleFont("Inter")
 
-internal val AuthInterFontFamily = androidx.compose.ui.text.font.FontFamily(
+internal val AuthInterFontFamily = FontFamily(
     Font(googleFont = InterFontName, fontProvider = provider, weight = FontWeight.Normal),
     Font(googleFont = InterFontName, fontProvider = provider, weight = FontWeight.Medium),
     Font(googleFont = InterFontName, fontProvider = provider, weight = FontWeight.SemiBold),
@@ -72,7 +70,7 @@ internal val AuthInterFontFamily = androidx.compose.ui.text.font.FontFamily(
 
 private val ClashGroteskFontName = GoogleFont("Clash Grotesk")
 
-internal val ClashGroteskFontFamily = androidx.compose.ui.text.font.FontFamily(
+internal val ClashGroteskFontFamily = FontFamily(
     Font(googleFont = ClashGroteskFontName, fontProvider = provider, weight = FontWeight.Normal),
     Font(googleFont = ClashGroteskFontName, fontProvider = provider, weight = FontWeight.Medium),
     Font(googleFont = ClashGroteskFontName, fontProvider = provider, weight = FontWeight.SemiBold),

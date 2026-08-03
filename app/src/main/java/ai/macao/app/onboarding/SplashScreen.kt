@@ -1,5 +1,6 @@
-package com.example.macaoai.onboarding
+package ai.macao.app.onboarding
 
+import ai.macao.app.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,7 +11,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.macaoai.R
 import kotlinx.coroutines.delay
 
 // Background cream color used across all screens

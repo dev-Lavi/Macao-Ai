@@ -1,4 +1,4 @@
-package com.example.macaoai.auth
+package ai.macao.app.auth
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -33,7 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.macaoai.R
+import ai.macao.app.R
 
 // Mindful Brown/40 and Mindful Brown/10 for the wavy background
 private val MindfulBrown40 = Color(0xFFB08060).copy(alpha = 0.40f)

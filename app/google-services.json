@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "784673029122",
+    "project_id": "macaoai",
+    "storage_bucket": "macaoai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:784673029122:android:9c63259d996147bcbefb1b",
+        "android_client_info": {
+          "package_name": "ai.macao.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "784673029122-03jpl583u17es7en7phdn4eaa35g4n46.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ai.macao.app",
+            "certificate_hash": "fdf6274704564d81f8359032c98166b0fe1cdae6"
+          }
+        },
+        {
+          "client_id": "784673029122-09hbsn1g3o57cudl89lfdchl0k086tbe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0psbFnzrzG_THFBdUsu-ow55lfRaRb8I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "784673029122-09hbsn1g3o57cudl89lfdchl0k086tbe.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

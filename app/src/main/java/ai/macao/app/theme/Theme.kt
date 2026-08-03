@@ -1,6 +1,5 @@
-package com.example.macaoai.ui.theme
+package ai.macao.app.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

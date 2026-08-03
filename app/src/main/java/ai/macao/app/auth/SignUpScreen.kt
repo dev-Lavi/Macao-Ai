@@ -1,10 +1,9 @@
-package com.example.macaoai.auth
+package ai.macao.app.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,9 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -30,15 +32,22 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.macaoai.R
+import ai.macao.app.R
 
 @Composable
 fun SignUpScreen(
     onBack: () -> Unit = {},
-    onContinue: (email: String) -> Unit = {},
+    onSignUpSuccess: () -> Unit = {},
     onNavigateToSignIn: () -> Unit = {},
 ) {
     var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -49,7 +58,6 @@ fun SignUpScreen(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Back button Row REMOVED
 
         CurvedAuthHeader(owlRes = R.drawable.owl_jump)
 
@@ -65,26 +73,81 @@ fun SignUpScreen(
             modifier = Modifier.padding(horizontal = 24.dp),
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
         AuthEmailField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                errorMessage = null
+            },
             showTrailingChevron = true,
             modifier = Modifier.padding(horizontal = 28.dp),
         )
 
+        Spacer(modifier = Modifier.height(18.dp))
+
+        AuthPasswordField(
+            value = password,
+            onValueChange = {
+                password = it
+                errorMessage = null
+            },
+            passwordVisible = passwordVisible,
+            onToggleVisibility = { passwordVisible = !passwordVisible },
+            modifier = Modifier.padding(horizontal = 28.dp),
+        )
+
+        if (errorMessage != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = errorMessage!!,
+                color = Color(0xFFB3261E),
+                fontSize = 13.sp,
+                fontFamily = AuthInterFontFamily,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 28.dp),
+            )
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
 
         MacaoPrimaryButton(
-            text = "Continue",
-            onClick = { onContinue(email) },
+            text = if (isLoading) "Creating Account..." else "Sign Up",
+            onClick = {
+                if (isLoading) return@MacaoPrimaryButton
+                isLoading = true
+                errorMessage = null
+                FirebaseAuthHelper.signUpWithEmail(
+                    email = email,
+                    password = password,
+                    onSuccess = {
+                        isLoading = false
+                        onSignUpSuccess()
+                    },
+                    onError = { err ->
+                        isLoading = false
+                        errorMessage = err
+                    },
+                )
+            },
             modifier = Modifier.padding(horizontal = 28.dp),
         )
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        SocialLoginRow()
+        SocialLoginRow(
+            onGoogleClick = {
+                errorMessage = null
+                FirebaseAuthHelper.launchGoogleSignIn(
+                    context = context,
+                    scope = coroutineScope,
+                    onSuccess = onSignUpSuccess,
+                    onError = { err -> errorMessage = err },
+                )
+            },
+        )
 
         Spacer(modifier = Modifier.height(40.dp))
 

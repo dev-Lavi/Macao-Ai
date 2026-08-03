@@ -1,4 +1,4 @@
-package com.example.macaoai.auth
+package ai.macao.app.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -45,7 +45,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
-import com.example.macaoai.R
+import ai.macao.app.R
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 private val OtpBodyCream        = Color(0xFFF2EDE8)
