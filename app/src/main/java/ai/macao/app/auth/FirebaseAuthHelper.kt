@@ -5,8 +5,8 @@ import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import androidx.credentials.exceptions.NoCredentialException
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -95,14 +95,10 @@ object FirebaseAuthHelper {
             "784673029122-09hbsn1g3o57cudl89lfdchl0k086tbe.apps.googleusercontent.com"
         }
 
-        val googleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(webClientId)
-            .setAutoSelectEnabled(false)
-            .build()
+        val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(webClientId).build()
 
         val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
+            .addCredentialOption(signInWithGoogleOption)
             .build()
 
         scope.launch {
@@ -126,8 +122,11 @@ object FirebaseAuthHelper {
                 } else {
                     onError("Unexpected credential format received.")
                 }
-            } catch (e: GetCredentialCancellationException) {
+            } catch (e: androidx.credentials.exceptions.GetCredentialCancellationException) {
                 Log.d("GoogleSignIn", "User cancelled Google sign in")
+            } catch (e: NoCredentialException) {
+                Log.d("GoogleSignIn", "No credentials available")
+                onError("No Google accounts found. Please add one in device settings.")
             } catch (e: Exception) {
                 Log.e("GoogleSignIn", "Error signing in with Google", e)
                 onError(e.localizedMessage ?: "Google Sign-In failed.")
