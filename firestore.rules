@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // =========================================================================
+    // USER PROFILE
+    // =========================================================================
+    match /users/{userId} {
+      allow read, create: if isOwner(userId);
+      allow update: if isOwner(userId)
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['email', 'createdAt', 'uid']));
+      allow delete: if isOwner(userId);
+
+      // =======================================================================
+      // USER PROGRESS (PER LANGUAGE)
+      // Read-only for client. Writes occur exclusively via Cloud Functions Admin SDK.
+      // =======================================================================
+      match /progress/{languageCode} {
+        allow read: if isOwner(userId);
+        allow write: if false; // Cloud Functions write via Admin SDK
+      }
+    }
+
+    // =========================================================================
+    // LEARNING CONTENT HIERARCHY
+    // Read-only for authenticated users. Writes forbidden from client SDKs.
+    // =========================================================================
+    match /content/{languageCode} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+
+      match /levels/{levelId} {
+        allow read: if isAuthenticated();
+        allow write: if false;
+
+        match /units/{unitId} {
+          allow read: if isAuthenticated();
+          allow write: if false;
+
+          match /lessons/{lessonId} {
+            allow read: if isAuthenticated();
+            allow write: if false;
+          }
+        }
+      }
+    }
+
+    // Deny access to any unspecified document path
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
