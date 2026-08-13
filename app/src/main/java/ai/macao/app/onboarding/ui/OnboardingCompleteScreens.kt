@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import ai.macao.app.auth.ClashGroteskFontFamily
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,7 +71,7 @@ fun CompilingDataScreen(
             // ── "Compiling Data..." ───────────────────────────────────────────
             Text(
                 text       = "Compiling Data...",
-                fontFamily = OnboardingFontFamily,
+                fontFamily = ClashGroteskFontFamily,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize   = 26.sp,
                 color      = Color.White,
@@ -206,7 +208,7 @@ fun AllSetScreen(
             // ── Headline ──────────────────────────────────────────────────────
             Text(
                 text       = "You're all Set Up.",
-                fontFamily = OnboardingFontFamily,
+                fontFamily = ClashGroteskFontFamily,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize   = 28.sp,
                 color      = Color.White,

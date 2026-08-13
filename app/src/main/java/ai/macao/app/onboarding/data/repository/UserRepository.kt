@@ -1,19 +1,17 @@
 package ai.macao.app.onboarding.data.repository
 
+import ai.macao.app.data.network.MacaoApiClient
 import ai.macao.app.onboarding.data.model.OnboardingData
 import ai.macao.app.onboarding.data.model.UserProfile
-import ai.macao.app.onboarding.data.service.FirestoreService
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.tasks.await
 
 /**
  * Single source of truth for user data.
- *
- * The ViewModel talks only to this class. Direct Firestore calls are
- * isolated in [FirestoreService] so this class stays testable.
+ * Redirects all data operations to the Render REST API instead of direct Firestore writes/reads.
  */
 class UserRepository(
-    private val firestoreService: FirestoreService = FirestoreService,
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance(),
 ) {
 
@@ -21,65 +19,116 @@ class UserRepository(
 
     /**
      * Returns the currently authenticated [FirebaseUser] or null.
-     * Does NOT perform a Firestore read.
      */
     fun getCurrentUser(): FirebaseUser? = firebaseAuth.currentUser
 
-    // ─── Firestore operations ────────────────────────────────────────────────
+    // ─── REST API operations ────────────────────────────────────────────────
 
     /**
      * Ensures a users/{uid} document exists with baseline fields.
-     *
-     * Safe to call on every sign-up/sign-in — merge semantics mean
-     * existing onboarding data is never overwritten.
      */
-    suspend fun createUserIfNotExists(): Result<Unit> {
+    suspend fun createUserIfNotExists(): Result<Unit> = runCatching {
         val user = firebaseAuth.currentUser
-            ?: return Result.failure(IllegalStateException("No authenticated user"))
+            ?: throw IllegalStateException("No authenticated user")
 
-        return firestoreService.createUserIfNotExists(
-            uid         = user.uid,
-            email       = user.email ?: "",
-            displayName = user.displayName ?: user.email?.substringBefore('@') ?: "",
-        )
+        val response = MacaoApiClient.apiService.getProfile()
+        if (!response.success || response.data == null) {
+            throw Exception(response.error?.message ?: "Failed to get or create profile")
+        }
+        Unit
     }
 
     /**
-     * Performs the single Firestore write at the end of onboarding.
-     *
-     * Called ONLY once — when the user taps the last step's option.
-     * Marks [OnboardingData.completed] = true before writing.
+     * Performs the single API write at the end of onboarding.
      */
-    suspend fun saveOnboarding(onboarding: OnboardingData): Result<Unit> {
-        val uid = firebaseAuth.currentUser?.uid
-            ?: return Result.failure(IllegalStateException("No authenticated user"))
+    suspend fun saveOnboarding(onboarding: OnboardingData): Result<Unit> = runCatching {
+        val user = firebaseAuth.currentUser
+            ?: throw IllegalStateException("No authenticated user")
 
         val completedOnboarding = onboarding.copy(completed = true)
-        return firestoreService.saveOnboarding(uid, completedOnboarding)
+        val fields = mapOf("onboarding" to completedOnboarding.toMap())
+        val response = MacaoApiClient.apiService.updateProfile(fields)
+        if (!response.success || response.data == null) {
+            throw Exception(response.error?.message ?: "Failed to save onboarding")
+        }
+        Unit
     }
 
     /**
-     * Fetches the full user profile from Firestore exactly once.
-     *
-     * Used by [MainActivity] at startup to decide whether to show
-     * the profile setup flow or skip straight to the main app.
+     * Fetches the full user profile from REST API.
      */
-    suspend fun getUserProfile(): Result<UserProfile?> {
-        val uid = firebaseAuth.currentUser?.uid
-            ?: return Result.failure(IllegalStateException("No authenticated user"))
+    suspend fun getUserProfile(): Result<UserProfile?> = runCatching {
+        val user = firebaseAuth.currentUser
+            ?: throw IllegalStateException("No authenticated user")
 
-        return firestoreService.getUserProfile(uid)
+        val response = MacaoApiClient.apiService.getProfile()
+        if (response.success) {
+            response.data
+        } else {
+            throw Exception(response.error?.message ?: "Failed to get profile")
+        }
     }
 
     /**
      * Updates arbitrary top-level profile fields.
-     *
-     * Provided for future profile-editing screens. Not called during onboarding.
      */
-    suspend fun updateProfile(fields: Map<String, Any>): Result<Unit> {
-        val uid = firebaseAuth.currentUser?.uid
-            ?: return Result.failure(IllegalStateException("No authenticated user"))
+    suspend fun updateProfile(fields: Map<String, Any>): Result<Unit> = runCatching {
+        val user = firebaseAuth.currentUser
+            ?: throw IllegalStateException("No authenticated user")
 
-        return firestoreService.updateProfile(uid, fields)
+        val response = MacaoApiClient.apiService.updateProfile(fields)
+        if (!response.success) {
+            throw Exception(response.error?.message ?: "Failed to update profile")
+        }
+        Unit
+    }
+
+    /**
+     * Updates both Firebase Auth display name and the REST user document.
+     */
+    suspend fun updateUserProfile(
+        name: String,
+        username: String,
+        settings: Map<String, Any>
+    ): Result<Unit> = runCatching {
+        val user = firebaseAuth.currentUser
+            ?: throw IllegalStateException("No authenticated user")
+
+        // Update Firebase Auth Display Name
+        val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+            .setDisplayName(name)
+            .build()
+        user.updateProfile(profileUpdates).await()
+
+        // Update REST API Document
+        val fields = hashMapOf<String, Any>(
+            "displayName" to name,
+            "username" to username
+        )
+        fields.putAll(settings)
+        val response = MacaoApiClient.apiService.updateProfile(fields)
+        if (!response.success) {
+            throw Exception(response.error?.message ?: "REST API update failed")
+        }
+        Unit
+    }
+
+    /**
+     * Deletes user document from REST API and then deletes authenticated user account.
+     */
+    suspend fun deleteAccount(): Result<Unit> = runCatching {
+        val user = firebaseAuth.currentUser
+            ?: throw IllegalStateException("No authenticated user")
+
+        // 1. Delete user profile doc from Firestore via REST API
+        val response = MacaoApiClient.apiService.deleteProfile()
+        if (!response.success) {
+            throw Exception(response.error?.message ?: "Profile deletion failed")
+        }
+
+        // 2. Delete Auth Account
+        user.delete().await()
+        Unit
     }
 }
+

@@ -1,5 +1,12 @@
 package ai.macao.app.auth
 
+import ai.macao.app.theme.AppBackground
+import ai.macao.app.theme.MindfulBrown
+import ai.macao.app.theme.MindfulBrown10
+import ai.macao.app.theme.MindfulBrown40
+import ai.macao.app.theme.MindfulBrown60
+import ai.macao.app.theme.MindfulBrown80
+import ai.macao.app.theme.OrangeAccent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -78,17 +85,17 @@ internal val ClashGroteskFontFamily = FontFamily(
     Font(googleFont = ClashGroteskFontName, fontProvider = provider, weight = FontWeight.ExtraBold),
 )
 
-// ─── Colors ──────────────────────────────────────────────────────────────────
+// ─── Colors (unified MindfulBrown palette) ─────────────────────────────────
 
-val AuthHeaderBrown = Color(0xFFC1A594)
-val AuthBodyCream = Color(0xFFFAF7F2)
-val AuthPrimaryBrown = Color(0xFF8B5E3C)
-val AuthInputBorder = Color(0xFFC8C4B8)
-val AuthSocialCircle = Color(0xFFF0EBE3)
-val AuthLabelBrown = Color(0xFF8B5E3C)
-val AuthPlaceholder = Color(0xFFB0A090)
-val AuthLinkBlue = Color(0xFF4A90D9)
-val AuthSubText = Color(0xFF9A8A7A)
+val AuthHeaderBrown  = MindfulBrown60
+val AuthBodyCream    = AppBackground
+val AuthPrimaryBrown = MindfulBrown
+val AuthInputBorder  = MindfulBrown40
+val AuthSocialCircle = MindfulBrown10
+val AuthLabelBrown   = MindfulBrown80
+val AuthPlaceholder  = MindfulBrown40
+val AuthLinkBlue     = Color(0xFF4A90D9)
+val AuthSubText      = MindfulBrown60
 
 private val PillShape = RoundedCornerShape(50)
 
@@ -160,6 +167,8 @@ fun AuthCircleBackButton(
     Box(
         modifier = modifier
             .size(40.dp)
+            .clip(CircleShape)
+            .border(1.5.dp, AuthPrimaryBrown, CircleShape)
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
@@ -167,29 +176,12 @@ fun AuthCircleBackButton(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(modifier = Modifier.size(36.dp)) {
-            val strokeWidth = 1.5.dp.toPx()
-            val inset = strokeWidth / 2f
-            drawCircle(
-                color = AuthPrimaryBrown,
-                radius = (size.minDimension - strokeWidth) / 2f,
-                center = Offset(size.width / 2f, size.height / 2f),
-                style = Stroke(width = strokeWidth),
-            )
-            val cx = size.width * 0.52f
-            val cy = size.height / 2f
-            val chevronLen = 5.dp.toPx()
-            val path = Path().apply {
-                moveTo(cx + chevronLen * 0.3f, cy - chevronLen)
-                lineTo(cx - chevronLen * 0.5f, cy)
-                lineTo(cx + chevronLen * 0.3f, cy + chevronLen)
-            }
-            drawPath(
-                path = path,
-                color = AuthPrimaryBrown,
-                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
-            )
-        }
+        Icon(
+            painter = painterResource(id = R.drawable.back),
+            contentDescription = "Back",
+            tint = AuthPrimaryBrown,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
 

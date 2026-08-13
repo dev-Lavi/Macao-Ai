@@ -4,6 +4,10 @@ import ai.macao.app.R
 import ai.macao.app.auth.AuthEntry
 import ai.macao.app.auth.AuthFlow
 import ai.macao.app.auth.ClashGroteskFontFamily
+import ai.macao.app.theme.MindfulBrown
+import ai.macao.app.theme.MindfulBrown40
+import ai.macao.app.theme.MindfulBrown60
+import ai.macao.app.theme.MindfulBrown80
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -29,6 +33,10 @@ import androidx.compose.ui.text.googlefonts.Font
 import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextAlign
 
 // ─── Google Font provider ───────────────────────────────────────────────────
 
@@ -47,12 +55,16 @@ private val InterFontFamily = FontFamily(
     Font(googleFont = InterFontName, fontProvider = provider, weight = FontWeight.ExtraBold),
 )
 
-// ─── Colors ─────────────────────────────────────────────────────────────────
+// ─── Colors (unified MindfulBrown palette) ───────────────────────────────────
 
-val ColorBrown    = Color(0xFF926247)
-val ColorDarkText = Color(0xFF7A5C44)
-val ColorSubText  = Color(0xFFA08060)
-val ColorDarkBtn  = Color(0xFF2D1A0E)
+// Warm rich brown used in onboarding decorative circles
+private val ColorBrown    = MindfulBrown
+// Primary body text
+val ColorDarkText = MindfulBrown80
+// Sub/body text
+val ColorSubText  = MindfulBrown60
+// Dark pill / CTA button
+val ColorDarkBtn  = MindfulBrown
 
 // ─── Data model ─────────────────────────────────────────────────────────────
 
@@ -317,15 +329,30 @@ fun GetStartedScreen(
             horizontalAlignment   = Alignment.CenterHorizontally,
             verticalArrangement   = Arrangement.Center,
         ) {
-            // Logo image ("MACAO Ai" text logo)
             Image(
-                painter            = painterResource(id = R.drawable.logo),
-                contentDescription = "Macao AI logo",
-                modifier           = Modifier
-                    .width(230.dp)
-                    .height(80.dp),
+                painter            = painterResource(id = R.drawable.owl_logo),
+                contentDescription = "Macao AI mascot logo",
+                modifier           = Modifier.size(180.dp),
                 contentScale       = ContentScale.Fit,
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(color = MindfulBrown)) {
+                        append("MACAO A")
+                    }
+                    withStyle(style = SpanStyle(color = Color(0xFF2E86DE))) {
+                        append("i")
+                    }
+                },
+                fontFamily = ClashGroteskFontFamily,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 42.sp,
+                textAlign = TextAlign.Center,
+            )
+
 
             Spacer(modifier = Modifier.height(48.dp))
 

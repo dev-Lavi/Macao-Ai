@@ -110,12 +110,20 @@ object FirestoreService {
         )
 
         UserProfile(
-            uid         = snapshot.getString("uid") ?: uid,
-            email       = snapshot.getString("email") ?: "",
-            displayName = snapshot.getString("displayName") ?: "",
-            onboarding  = onboardingData,
-            createdAt   = snapshot.get("createdAt"),
-            updatedAt   = snapshot.get("updatedAt"),
+            uid                  = snapshot.getString("uid") ?: uid,
+            email                = snapshot.getString("email") ?: "",
+            displayName          = snapshot.getString("displayName") ?: "",
+            username             = snapshot.getString("username") ?: "",
+            facebookConnected    = snapshot.getBoolean("facebookConnected") ?: false,
+            googleConnected      = snapshot.getBoolean("googleConnected") ?: true,
+            soundEffects         = snapshot.getBoolean("soundEffects") ?: true,
+            animations           = snapshot.getBoolean("animations") ?: true,
+            darkMode             = snapshot.getString("darkMode") ?: "OFF",
+            motivationalMessages = snapshot.getBoolean("motivationalMessages") ?: true,
+            listeningExercises   = snapshot.getBoolean("listeningExercises") ?: false,
+            onboarding           = onboardingData,
+            createdAt            = snapshot.get("createdAt"),
+            updatedAt            = snapshot.get("updatedAt"),
         )
     }.onFailure {
         Log.e(TAG, "getUserProfile: failed for uid=$uid", it)
@@ -143,5 +151,21 @@ object FirestoreService {
         Unit
     }.onFailure {
         Log.e(TAG, "updateProfile: failed for uid=$uid", it)
+    }
+
+    // ─── Delete user document ─────────────────────────────────────────────
+
+    /**
+     * Deletes the user's document from Firestore.
+     */
+    suspend fun deleteUserDocument(uid: String): Result<Unit> = runCatching {
+        db.collection(USERS_COLLECTION)
+            .document(uid)
+            .delete()
+            .await()
+        Log.d(TAG, "deleteUserDocument: success for uid=$uid")
+        Unit
+    }.onFailure {
+        Log.e(TAG, "deleteUserDocument: failed for uid=$uid", it)
     }
 }

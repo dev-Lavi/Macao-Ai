@@ -1,6 +1,13 @@
 package ai.macao.app.onboarding.ui
 
 import ai.macao.app.R
+import ai.macao.app.theme.AppBackground
+import ai.macao.app.theme.MindfulBrown
+import ai.macao.app.theme.MindfulBrown10
+import ai.macao.app.theme.MindfulBrown40
+import ai.macao.app.theme.MindfulBrown60
+import ai.macao.app.theme.MindfulBrown80
+import ai.macao.app.theme.OrangeAccent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -12,12 +19,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 
 import androidx.compose.material3.*
+import ai.macao.app.auth.ClashGroteskFontFamily
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -43,16 +53,17 @@ val OnboardingFontFamily = FontFamily(
     Font(googleFont = InterName, fontProvider = provider, weight = FontWeight.Bold),
 )
 
-// ─── Color palette ───────────────────────────────────────────────────────────
+// ─── Color palette (mapped to central MindfulBrown theme) ───────────────────
 
-val BgCream        = Color(0xFFF5F0E8)
-val OrangeBorder   = Color(0xFFE8572A)
-val PillBackground = Color(0xFFEDE8DF)
-val PillSelected   = Color(0xFF2D1A0E)
-val TextDark       = Color(0xFF1A0E05)
-val TextMedium     = Color(0xFF6B5B4E)
-val TextLight      = Color(0xFFA08060)
-val SearchBarBg    = Color(0xFFEAE4DA)
+/** Alias kept for backward compat — equals AppBackground */
+val BgCream        = AppBackground
+val OrangeBorder   = OrangeAccent
+val PillBackground = MindfulBrown10
+val PillSelected   = MindfulBrown
+val TextDark       = MindfulBrown80
+val TextMedium     = MindfulBrown60
+val TextLight      = MindfulBrown40
+val SearchBarBg    = MindfulBrown10
 
 // ─── Top bar with back arrow + step progress ─────────────────────────────────
 
@@ -85,11 +96,11 @@ fun ProfileSetupTopBar(
                     .clickable(onClick = onBack),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text       = "←",
-                    color      = TextDark,
-                    fontSize   = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                Icon(
+                    painter = painterResource(id = R.drawable.back),
+                    contentDescription = "Back",
+                    tint = TextDark,
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
@@ -97,7 +108,7 @@ fun ProfileSetupTopBar(
 
             Text(
                 text       = "Profile setup",
-                fontFamily = OnboardingFontFamily,
+                fontFamily = ClashGroteskFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize   = 17.sp,
                 color      = TextDark,
@@ -179,7 +190,7 @@ fun QuestionCard(
     ) {
         Text(
             text       = question,
-            fontFamily = OnboardingFontFamily,
+            fontFamily = ClashGroteskFontFamily,
             fontWeight = FontWeight.Bold,
             fontSize   = 20.sp,
             color      = TextDark,
@@ -307,7 +318,12 @@ fun LanguageSearchBar(
                         }
                         innerTextField()
                     }
-                    Text(text = "🔍", fontSize = 16.sp)
+                    Icon(
+                        painter = painterResource(id = R.drawable.search),
+                        contentDescription = "Search",
+                        tint = TextLight,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         },
