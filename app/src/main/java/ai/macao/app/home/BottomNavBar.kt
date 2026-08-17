@@ -33,12 +33,12 @@ import androidx.compose.ui.unit.dp
 
 // ─── Home tab enum ────────────────────────────────────────────────────────────
 
-enum class HomeTab { Home, Notification, Chart, Profile }
+enum class HomeTab { Home, AiTalk, Notification, Chart, Profile }
 
 // ─── Bottom Nav Bar ───────────────────────────────────────────────────────────
 
 /**
- * Pill-shaped bottom navigation bar with four icons.
+ * Pill-shaped bottom navigation bar with five icons.
  *
  * The active tab is highlighted with [OrangeAccent]; inactive icons are
  * tinted with [MindfulBrown40] to stay consistent with the app-wide palette.
@@ -53,7 +53,7 @@ fun BottomNavBar(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Row(
@@ -66,14 +66,19 @@ fun BottomNavBar(
                 )
                 .clip(RoundedCornerShape(40.dp))
                 .background(Color.White)
-                .padding(horizontal = 32.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(36.dp),
+                .padding(horizontal = 24.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(22.dp),
             verticalAlignment     = Alignment.CenterVertically,
         ) {
             NavItem(
                 iconRes  = R.drawable.home,
                 selected = selectedTab == HomeTab.Home,
                 onClick  = { onTabSelected(HomeTab.Home) },
+            )
+            NavItem(
+                iconRes  = R.drawable.chatbot,
+                selected = selectedTab == HomeTab.AiTalk,
+                onClick  = { onTabSelected(HomeTab.AiTalk) },
             )
             NavItem(
                 iconRes  = R.drawable.notification,

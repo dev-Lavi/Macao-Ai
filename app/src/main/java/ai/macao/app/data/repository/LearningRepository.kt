@@ -106,4 +106,66 @@ class LearningRepository {
             }
         }
     }
+
+    /**
+     * Starts a conversation session on the server.
+     */
+    suspend fun startConversation(
+        languageCode: String,
+        levelId: String,
+        lessonId: String,
+        nativeLanguage: String
+    ): Result<StartConversationResponse> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = api.startConversation(
+                StartConversationRequest(languageCode, levelId, lessonId, nativeLanguage)
+            )
+            if (response.success && response.data != null) {
+                response.data
+            } else {
+                throw Exception(response.error?.message ?: "Failed to start conversation.")
+            }
+        }
+    }
+
+    /**
+     * Submits a conversation turn with transcript.
+     */
+    suspend fun submitTurn(
+        sessionId: String,
+        turnNumber: Int,
+        transcript: String
+    ): Result<ConversationTurnResponse> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = api.submitTurn(
+                sessionId,
+                ConversationTurnRequest(turnNumber, transcript)
+            )
+            if (response.success && response.data != null) {
+                response.data
+            } else {
+                throw Exception(response.error?.message ?: "Failed to submit turn.")
+            }
+        }
+    }
+
+    /**
+     * Completes the conversation session on the server and retrieves stats/level unlocks.
+     */
+    suspend fun completeConversation(
+        sessionId: String,
+        timeSpentSeconds: Int
+    ): Result<CompleteConversationResponse> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = api.completeConversation(
+                sessionId,
+                CompleteConversationRequest(timeSpentSeconds)
+            )
+            if (response.success && response.data != null) {
+                response.data
+            } else {
+                throw Exception(response.error?.message ?: "Failed to complete conversation.")
+            }
+        }
+    }
 }
