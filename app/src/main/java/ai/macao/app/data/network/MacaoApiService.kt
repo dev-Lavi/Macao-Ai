@@ -69,6 +69,24 @@ interface MacaoApiService {
     suspend fun unlockLevel(
         @Body payload: Map<String, @JvmSuppressWildcards Any>
     ): ApiResponse<UnlockLevelResponse>
+
+    // Conversation endpoints
+    @POST("conversation/start")
+    suspend fun startConversation(
+        @Body request: StartConversationRequest
+    ): ApiResponse<StartConversationResponse>
+
+    @POST("conversation/{sessionId}/turn")
+    suspend fun submitTurn(
+        @Path("sessionId") sessionId: String,
+        @Body request: ConversationTurnRequest
+    ): ApiResponse<ConversationTurnResponse>
+
+    @POST("conversation/{sessionId}/complete")
+    suspend fun completeConversation(
+        @Path("sessionId") sessionId: String,
+        @Body request: CompleteConversationRequest
+    ): ApiResponse<CompleteConversationResponse>
 }
 
 // Data models representing backend response data structures

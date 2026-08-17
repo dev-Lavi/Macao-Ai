@@ -44,6 +44,7 @@ import androidx.compose.foundation.layout.width
 import ai.macao.app.theme.MindfulBrown
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
 
 // ─── App screen enum ──────────────────────────────────────────────────────────
 
@@ -201,17 +202,40 @@ fun MainAppShell(
             }
         }
         is LessonUiState.Content -> {
-            val currentItem = state.lesson.items[state.currentIndex]
-            LessonPracticeScreen(
-                lessonTitle = state.lesson.title,
-                currentItem = currentItem,
-                currentIndex = state.currentIndex,
-                totalItems = state.lesson.items.size,
-                practiceState = state.practiceState,
-                onMicClick = { learningViewModel.startSpeechPractice() },
-                onNextClick = { learningViewModel.advanceOrComplete() },
-                onCancelClick = { learningViewModel.cancelLesson() }
-            )
+            if (state.lesson.category == "Conversation Scenarios") {
+                val context = LocalContext.current
+                val conversationViewModel: ConversationViewModel = viewModel(
+                    factory = ConversationViewModel.provideFactory(context)
+                )
+
+                LaunchedEffect(state.lesson.id) {
+                    conversationViewModel.startConversation(
+                        languageCode = state.lesson.languageCode,
+                        levelId = state.lesson.levelId,
+                        lessonId = state.lesson.id
+                    )
+                }
+
+                ConversationScreen(
+                    viewModel = conversationViewModel,
+                    onCancelClick = {
+                        learningViewModel.cancelLesson()
+                        learningViewModel.loadLevels(langCode)
+                    }
+                )
+            } else {
+                val currentItem = state.lesson.items[state.currentIndex]
+                LessonPracticeScreen(
+                    lessonTitle = state.lesson.title,
+                    currentItem = currentItem,
+                    currentIndex = state.currentIndex,
+                    totalItems = state.lesson.items.size,
+                    practiceState = state.practiceState,
+                    onMicClick = { learningViewModel.startSpeechPractice() },
+                    onNextClick = { learningViewModel.advanceOrComplete() },
+                    onCancelClick = { learningViewModel.cancelLesson() }
+                )
+            }
         }
         is LessonUiState.Completed -> {
             LessonCompleteScreen(
@@ -361,6 +385,40 @@ fun MainAppShell(
                                 }
                             }
                         }
+                    }
+
+                    HomeTab.AiTalk -> {
+                        val context = LocalContext.current
+                        val conversationViewModel: ConversationViewModel = viewModel(
+                            factory = ConversationViewModel.provideFactory(context)
+                        )
+
+                        val lessonId = when (langCode) {
+                            "es" -> "es_intro_01"
+                            "ja" -> "jp_n5_intro_01"
+                            "de" -> "objects_de_01"
+                            "fr" -> "objects_fr_01"
+                            "en" -> "objects_en_01"
+                            "it" -> "objects_it_01"
+                            "pt" -> "objects_pt_01"
+                            else -> "jp_n5_intro_01"
+                        }
+
+                        LaunchedEffect(langCode) {
+                            conversationViewModel.startConversation(
+                                languageCode = langCode,
+                                levelId = "level_1",
+                                lessonId = lessonId
+                            )
+                        }
+
+                        ConversationScreen(
+                            viewModel = conversationViewModel,
+                            onCancelClick = {
+                                selectedTab = HomeTab.Home
+                                learningViewModel.loadLevels(langCode)
+                            }
+                        )
                     }
 
                     HomeTab.Profile -> AccountScreen(
