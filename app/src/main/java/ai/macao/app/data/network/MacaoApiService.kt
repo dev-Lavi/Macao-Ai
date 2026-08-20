@@ -87,6 +87,31 @@ interface MacaoApiService {
         @Path("sessionId") sessionId: String,
         @Body request: CompleteConversationRequest
     ): ApiResponse<CompleteConversationResponse>
+
+    // Situation Mission endpoints
+    @GET("situations/missions")
+    suspend fun getSituationMissions(
+        @Query("languageCode") languageCode: String,
+        @Query("levelId") levelId: String = "level_1"
+    ): ApiResponse<List<ai.macao.app.home.data.MissionData>>
+
+    @GET("situations/missions/{missionId}")
+    suspend fun getSituationMissionById(
+        @Path("missionId") missionId: String,
+        @Query("languageCode") languageCode: String
+    ): ApiResponse<ai.macao.app.home.data.MissionData>
+
+    @POST("situations/activities/{activityId}/attempt")
+    suspend fun submitActivityAttempt(
+        @Path("activityId") activityId: String,
+        @Body request: ActivityAttemptRequest
+    ): ApiResponse<ActivityAttemptResponse>
+
+    @POST("situations/missions/{missionId}/complete")
+    suspend fun completeSituationMission(
+        @Path("missionId") missionId: String,
+        @Body request: SituationMissionCompleteRequest
+    ): ApiResponse<SituationMissionCompleteResponse>
 }
 
 // Data models representing backend response data structures
@@ -213,4 +238,33 @@ data class UnlockLevelResponse(
     val actualCompletedLessons: Int?,
     val requiredScore: Int?,
     val actualAverageScore: Int?
+)
+
+data class ActivityAttemptRequest(
+    val answer: String,
+    val languageCode: String
+)
+
+data class ActivityAttemptResponse(
+    val activityId: String,
+    val answer: String,
+    val isCorrect: Boolean,
+    val correctAnswer: String
+)
+
+data class SituationMissionCompleteRequest(
+    val languageCode: String,
+    val score: Int = 100,
+    val accuracy: Double = 100.0,
+    val timeSpentSeconds: Int = 120
+)
+
+data class SituationMissionCompleteResponse(
+    val missionId: String,
+    val languageCode: String,
+    val completed: Boolean,
+    val xpEarned: Int,
+    val totalXp: Int,
+    val streak: StreakResponse?,
+    val unlockedNextLevel: Boolean
 )

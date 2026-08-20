@@ -8,107 +8,36 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-// ─── Built-in language list ───────────────────────────────────────────────────
+// ─── Supported language list ─────────────────────────────────────────────────
 
 /**
- * A curated list of 50+ languages with emoji flag representations.
+ * Single source of truth for Supported Languages in MacaoAI.
  *
- * This covers the vast majority of real-world users without requiring
- * a network call. Users can search for any of the 1,242 BCP-47 languages
- * by typing in the search bar (filtered against this list).
- *
- * To extend, simply append entries — the picker is data-driven.
+ * Contains only languages fully backed by lessons, AI services,
+ * speech recognition, and TTS engines.
  */
-data class Language(val flag: String, val name: String)
+data class Language(val code: String, val flag: String, val name: String)
 
-val AllLanguages: List<Language> = listOf(
-    Language("🇺🇸", "English"),
-    Language("🇪🇸", "Spanish"),
-    Language("🇫🇷", "French"),
-    Language("🇩🇪", "German"),
-    Language("🇧🇷", "Portuguese"),
-    Language("🇮🇹", "Italian"),
-    Language("🇯🇵", "Japanese"),
-    Language("🇰🇷", "Korean"),
-    Language("🇨🇳", "Chinese (Mandarin)"),
-    Language("🇹🇼", "Chinese (Traditional)"),
-    Language("🇷🇺", "Russian"),
-    Language("🇸🇦", "Arabic"),
-    Language("🇮🇳", "Hindi"),
-    Language("🇮🇳", "Bengali"),
-    Language("🇮🇳", "Tamil"),
-    Language("🇮🇳", "Telugu"),
-    Language("🇮🇳", "Marathi"),
-    Language("🇮🇳", "Gujarati"),
-    Language("🇮🇳", "Kannada"),
-    Language("🇮🇳", "Malayalam"),
-    Language("🇵🇰", "Urdu"),
-    Language("🇳🇱", "Dutch"),
-    Language("🇵🇱", "Polish"),
-    Language("🇺🇦", "Ukrainian"),
-    Language("🇸🇪", "Swedish"),
-    Language("🇳🇴", "Norwegian"),
-    Language("🇩🇰", "Danish"),
-    Language("🇫🇮", "Finnish"),
-    Language("🇬🇷", "Greek"),
-    Language("🇨🇿", "Czech"),
-    Language("🇸🇰", "Slovak"),
-    Language("🇭🇺", "Hungarian"),
-    Language("🇷🇴", "Romanian"),
-    Language("🇧🇬", "Bulgarian"),
-    Language("🇭🇷", "Croatian"),
-    Language("🇷🇸", "Serbian"),
-    Language("🇸🇮", "Slovenian"),
-    Language("🇪🇪", "Estonian"),
-    Language("🇱🇻", "Latvian"),
-    Language("🇱🇹", "Lithuanian"),
-    Language("🇮🇱", "Hebrew"),
-    Language("🇹🇷", "Turkish"),
-    Language("🇮🇩", "Indonesian"),
-    Language("🇲🇾", "Malay"),
-    Language("🇹🇭", "Thai"),
-    Language("🇻🇳", "Vietnamese"),
-    Language("🇵🇭", "Filipino"),
-    Language("🇦🇿", "Azerbaijani"),
-    Language("🇬🇪", "Georgian"),
-    Language("🇦🇲", "Armenian"),
-    Language("🇰🇿", "Kazakh"),
-    Language("🇺🇿", "Uzbek"),
-    Language("🇲🇳", "Mongolian"),
-    Language("🇿🇦", "Zulu"),
-    Language("🇳🇬", "Yoruba"),
-    Language("🇳🇬", "Hausa"),
-    Language("🇰🇪", "Swahili"),
-    Language("🇪🇹", "Amharic"),
-    Language("🇮🇷", "Persian"),
-    Language("🇦🇫", "Pashto"),
-    Language("🇱🇰", "Sinhala"),
-    Language("🇳🇵", "Nepali"),
-    Language("🏴󠁧󠁢󠁷󠁬󠁳󠁿", "Welsh"),
-    Language("🇮🇪", "Irish"),
-    Language("🏴󠁧󠁢󠁳󠁣󠁴󠁿", "Scottish Gaelic"),
-    Language("🇲🇹", "Maltese"),
-    Language("🇦🇱", "Albanian"),
-    Language("🇲🇰", "Macedonian"),
-    Language("🇧🇦", "Bosnian"),
-    Language("🇲🇽", "Spanish (Mexico)"),
-    Language("🇦🇷", "Spanish (Argentina)"),
-    Language("🇨🇦", "French (Canada)"),
-    Language("🇨🇭", "German (Swiss)"),
-    Language("🇦🇹", "German (Austria)"),
-    Language("🇵🇹", "Portuguese (Portugal)"),
-    Language("🇪🇬", "Arabic (Egypt)"),
-    Language("🇲🇦", "Arabic (Morocco)"),
-    Language("🌐", "Sign Language"),
-    Language("🌐", "Other"),
+val SupportedLanguages: List<Language> = listOf(
+    Language("en", "🇺🇸", "English"),
+    Language("es", "🇪🇸", "Spanish"),
+    Language("fr", "🇫🇷", "French"),
+    Language("de", "🇩🇪", "German"),
+    Language("ja", "🇯🇵", "Japanese"),
+    Language("it", "🇮🇹", "Italian"),
+    Language("pt", "🇧🇷", "Portuguese"),
+    Language("hi", "🇮🇳", "Hindi"),
 )
+
+// Legacy alias for backwards compatibility
+val AllLanguages: List<Language> = SupportedLanguages
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 /**
  * Searchable language picker used for Steps 1 (native) and 2 (learning).
  *
- * - Shows all languages by default.
+ * - Shows supported languages by default.
  * - Filters in real-time as the user types in the search bar.
  * - Tapping a language calls [onLanguageSelected] and auto-advances.
  * - No "Next" button — selection immediately proceeds to the next step.
@@ -121,12 +50,13 @@ fun LanguagePickerScreen(
     onLanguageSelected : (String) -> Unit,
     onBack             : () -> Unit,
     modifier           : Modifier = Modifier,
+    availableLanguages : List<Language> = SupportedLanguages,
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
-    val filteredLanguages = remember(searchQuery) {
-        if (searchQuery.isBlank()) AllLanguages
-        else AllLanguages.filter {
+    val filteredLanguages = remember(searchQuery, availableLanguages) {
+        if (searchQuery.isBlank()) availableLanguages
+        else availableLanguages.filter {
             it.name.contains(searchQuery.trim(), ignoreCase = true)
         }
     }

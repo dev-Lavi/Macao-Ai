@@ -43,22 +43,29 @@ class TextToSpeechManagerImpl(private val context: Context) : TextToSpeechManage
     }
 
     override fun speak(text: String, languageCode: String, slowMode: Boolean) {
-        if (text.isBlank()) return
+        val cleanText = text.substringBefore("(").trim()
+        if (cleanText.isBlank()) return
 
         if (!isInitialized) {
-            Log.w(TAG, "TTS engine not initialized yet. Queueing speech: \"$text\"")
-            pendingSpeech = Pair(text, languageCode)
+            Log.w(TAG, "TTS engine not initialized yet. Queueing speech: \"$cleanText\"")
+            pendingSpeech = Pair(cleanText, languageCode)
             pendingSlowMode = slowMode
             return
         }
 
-        val locale = when (languageCode.lowercase()) {
-            "ja" -> Locale.JAPANESE
-            "es" -> Locale("es", "ES")
-            "fr" -> Locale.FRANCE
-            "de" -> Locale.GERMANY
-            "ko" -> Locale.KOREAN
-            "zh" -> Locale.CHINESE
+        val normalizedLang = languageCode.lowercase().replace("_", "-")
+        val langPrefix = normalizedLang.split("-").firstOrNull() ?: normalizedLang
+
+        val locale = when {
+            normalizedLang.startsWith("ja") || langPrefix == "ja" -> Locale.JAPANESE
+            normalizedLang.startsWith("es") || langPrefix == "es" -> Locale.forLanguageTag("es-ES")
+            normalizedLang.startsWith("fr") || langPrefix == "fr" -> Locale.FRANCE
+            normalizedLang.startsWith("de") || langPrefix == "de" -> Locale.GERMANY
+            normalizedLang.startsWith("it") || langPrefix == "it" -> Locale.ITALIAN
+            normalizedLang.startsWith("pt") || langPrefix == "pt" -> Locale.forLanguageTag("pt-BR")
+            normalizedLang.startsWith("hi") || langPrefix == "hi" -> Locale.forLanguageTag("hi-IN")
+            normalizedLang.startsWith("ko") || langPrefix == "ko" -> Locale.KOREAN
+            normalizedLang.startsWith("zh") || langPrefix == "zh" -> Locale.CHINESE
             else -> Locale.US
         }
 
@@ -75,8 +82,8 @@ class TextToSpeechManagerImpl(private val context: Context) : TextToSpeechManage
             val speechRate = if (slowMode) 0.75f else 1.0f
             tts?.setSpeechRate(speechRate)
 
-            Log.i(TAG, "Speaking: \"$text\" [Language: $locale, SlowMode: $slowMode]")
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "MACAOAI_TTS_UTTERANCE")
+            Log.i(TAG, "Speaking: \"$cleanText\" [Language: $locale, SlowMode: $slowMode]")
+            tts?.speak(cleanText, TextToSpeech.QUEUE_FLUSH, null, "MACAOAI_TTS_UTTERANCE")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to speak text: ${e.message}")
         }

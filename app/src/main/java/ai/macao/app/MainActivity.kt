@@ -180,6 +180,7 @@ fun MainAppShell(
             "german" -> "de"
             "italian" -> "it"
             "portuguese" -> "pt"
+            "hindi" -> "hi"
             else -> "ja"
         }
     }
@@ -218,6 +219,22 @@ fun MainAppShell(
 
                 ConversationScreen(
                     viewModel = conversationViewModel,
+                    onCancelClick = {
+                        learningViewModel.cancelLesson()
+                        learningViewModel.loadLevels(langCode)
+                    }
+                )
+            } else if (state.lesson.category == "Situation Mission") {
+                val missionDataState by learningViewModel.missionDataState.collectAsState()
+                val missionData = missionDataState ?: remember(state.lesson.languageCode) {
+                    MissionRepository.getAirportMission(state.lesson.languageCode)
+                }
+                SituationMissionScreen(
+                    missionData = missionData,
+                    languageCode = state.lesson.languageCode,
+                    onMissionComplete = { xp, accuracy ->
+                        learningViewModel.completeSituationMission(xp, accuracy)
+                    },
                     onCancelClick = {
                         learningViewModel.cancelLesson()
                         learningViewModel.loadLevels(langCode)
@@ -475,33 +492,43 @@ private fun OnboardingCheckScreen() {
  */
 private fun mapLevelsToStages(levels: List<LevelResponse>): List<StageModel> {
     val stages = mutableListOf<StageModel>()
-    var stageId = 1
-    
-    val offsets = listOf(-75, 65, -55, 70, -65, 50, -40)
-    
+
+    // Mission 1: Airport Situation level as Stage 1
+    stages.add(
+        StageModel(
+            id = 1,
+            levelNumber = 1,
+            title = "Mission 1: The Airport",
+            subtitle = "Arrival & Airport Essentials",
+            state = StageState.CURRENT,
+            decoration = StageDecoration.LIGHTNING,
+            hasPlayerAvatar = true,
+            xOffsetDp = -75,
+            lessonData = LessonData(
+                levelTitle = "Level 1 - Airport Mission",
+                japaneseText = "Mission 1: The Airport",
+                romajiText = "Arrival in Madrid",
+                translationText = "Situation Level",
+                promptText = "level_1_situation|mission_airport_01"
+            )
+        )
+    )
+
+    var stageId = 2
+    val offsets = listOf(65, -55, 70, -65, 50, -40)
+
     levels.forEach { level ->
         level.units?.forEach { unit ->
             unit.lessons.forEach { lesson ->
-                val offsetIndex = (stageId - 1) % offsets.size
+                val offsetIndex = (stageId - 2) % offsets.size
                 val offset = offsets[offsetIndex]
-                
+
                 val decoration = when (stageId % 5) {
                     1 -> StageDecoration.LIGHTNING
                     2 -> StageDecoration.COIN
                     3 -> StageDecoration.STAR
                     4 -> StageDecoration.CHEST
                     else -> StageDecoration.NONE
-                }
-                
-                val isFirstUncompleted = !lesson.completed && stages.none { 
-                    it.state == StageState.CURRENT && it.levelNumber == level.order 
-                }
-                
-                val state = when {
-                    !level.unlocked -> StageState.LOCKED
-                    lesson.completed -> StageState.COMPLETED
-                    isFirstUncompleted -> StageState.CURRENT
-                    else -> StageState.LOCKED
                 }
 
                 stages.add(
@@ -510,9 +537,9 @@ private fun mapLevelsToStages(levels: List<LevelResponse>): List<StageModel> {
                         levelNumber = level.order,
                         title = lesson.title,
                         subtitle = lesson.description,
-                        state = state,
+                        state = StageState.LOCKED,
                         decoration = decoration,
-                        hasPlayerAvatar = state == StageState.CURRENT,
+                        hasPlayerAvatar = false,
                         xOffsetDp = offset,
                         lessonData = LessonData(
                             levelTitle = level.title,
@@ -528,15 +555,5 @@ private fun mapLevelsToStages(levels: List<LevelResponse>): List<StageModel> {
         }
     }
 
-    if (stages.none { it.state == StageState.CURRENT }) {
-        val firstUnlockedIndex = stages.indexOfFirst { it.state != StageState.LOCKED }
-        if (firstUnlockedIndex != -1) {
-            stages[firstUnlockedIndex] = stages[firstUnlockedIndex].copy(
-                state = StageState.CURRENT,
-                hasPlayerAvatar = true
-            )
-        }
-    }
-    
     return stages
 }

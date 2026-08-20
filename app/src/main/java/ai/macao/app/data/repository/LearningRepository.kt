@@ -168,4 +168,80 @@ class LearningRepository {
             }
         }
     }
+
+    /**
+     * Fetches situation missions for a language and level from backend API.
+     */
+    suspend fun getSituationMissions(
+        languageCode: String,
+        levelId: String = "level_1"
+    ): Result<List<ai.macao.app.home.data.MissionData>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = api.getSituationMissions(languageCode, levelId)
+            if (response.success && response.data != null) {
+                response.data
+            } else {
+                throw Exception(response.error?.message ?: "Failed to load situation missions.")
+            }
+        }
+    }
+
+    /**
+     * Fetches full mission details & activities for a single mission from backend API.
+     */
+    suspend fun getSituationMissionById(
+        missionId: String,
+        languageCode: String
+    ): Result<ai.macao.app.home.data.MissionData> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = api.getSituationMissionById(missionId, languageCode)
+            if (response.success && response.data != null) {
+                response.data
+            } else {
+                // Return local localized provider fallback if backend is unreachable or returning empty
+                ai.macao.app.home.data.MissionRepository.getAirportMission(languageCode)
+            }
+        }.recover {
+            ai.macao.app.home.data.MissionRepository.getAirportMission(languageCode)
+        }
+    }
+
+    /**
+     * Submits an activity answer attempt to the backend API for server-side validation.
+     */
+    suspend fun submitActivityAttempt(
+        activityId: String,
+        answer: String,
+        languageCode: String
+    ): Result<ActivityAttemptResponse> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = api.submitActivityAttempt(activityId, ActivityAttemptRequest(answer, languageCode))
+            if (response.success && response.data != null) {
+                response.data
+            } else {
+                throw Exception(response.error?.message ?: "Failed to submit activity attempt.")
+            }
+        }
+    }
+
+    /**
+     * Records mission completion on the backend API and receives XP rewards & level unlocks.
+     */
+    suspend fun completeSituationMission(
+        missionId: String,
+        languageCode: String,
+        score: Int = 100,
+        accuracy: Double = 100.0,
+        timeSpentSeconds: Int = 120
+    ): Result<SituationMissionCompleteResponse> = withContext(Dispatchers.IO) {
+        runCatching {
+            val payload = SituationMissionCompleteRequest(languageCode, score, accuracy, timeSpentSeconds)
+            val response = api.completeSituationMission(missionId, payload)
+            if (response.success && response.data != null) {
+                response.data
+            } else {
+                throw Exception(response.error?.message ?: "Failed to complete mission on backend.")
+            }
+        }
+    }
 }
