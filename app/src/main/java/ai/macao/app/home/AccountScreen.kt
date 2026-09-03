@@ -104,39 +104,14 @@ fun AccountScreen(
     onFollow     : () -> Unit   = {},
     onShare      : () -> Unit   = {},
     onBlockUser  : () -> Unit   = {},
+    viewModel    : ai.macao.app.home.viewmodel.ProfileViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppBackground),
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 100.dp),
-            ) {
-                ProfileHeader(data, onFollow, onShare)
-                Spacer(modifier = Modifier.height(20.dp))
-                StatisticsSection(data)
-                Spacer(modifier = Modifier.height(20.dp))
-                XpChartSection(data)
-                Spacer(modifier = Modifier.height(20.dp))
-                FriendsSection()
-                Spacer(modifier = Modifier.height(20.dp))
-                AchievementsSection()
-                Spacer(modifier = Modifier.height(24.dp))
-                BlockUserButton(onBlockUser)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-        BottomNavBar(
-            selectedTab   = selectedTab,
-            onTabSelected = onTabSelected,
-            modifier      = Modifier.align(Alignment.BottomCenter),
-        )
-    }
+    ProfileScreen(
+        viewModel     = viewModel,
+        selectedTab   = selectedTab,
+        onTabSelected = onTabSelected,
+        onBack        = { onTabSelected(HomeTab.Home) }
+    )
 }
 
 // ─── Profile header ───────────────────────────────────────────────────────────

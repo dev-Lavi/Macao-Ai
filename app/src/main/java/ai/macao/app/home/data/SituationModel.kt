@@ -122,14 +122,16 @@ data class MissionData(
 object MissionRepository {
 
     fun getAirportMission(languageCode: String): MissionData {
-        val lang = languageCode.lowercase().split("-", "_").firstOrNull() ?: "es"
-        return when (lang) {
-            "es" -> createSpanishAirportMission()
-            "ja" -> createJapaneseAirportMission()
-            "fr" -> createFrenchAirportMission()
-            "de" -> createGermanAirportMission()
-            "pt" -> createPortugueseAirportMission()
-            "it" -> createItalianAirportMission()
+        val normalizedLang = languageCode.lowercase().replace("_", "-")
+        val lang = normalizedLang.split("-").firstOrNull() ?: normalizedLang
+        return when {
+            lang.startsWith("es") || lang == "spanish" -> createSpanishAirportMission()
+            lang.startsWith("ja") || lang == "japanese" -> createJapaneseAirportMission()
+            lang.startsWith("fr") || lang == "french" -> createFrenchAirportMission()
+            lang.startsWith("de") || lang == "german" -> createGermanAirportMission()
+            lang.startsWith("pt") || lang == "portuguese" -> createPortugueseAirportMission()
+            lang.startsWith("it") || lang == "italian" -> createItalianAirportMission()
+            lang.startsWith("hi") || lang == "hindi" -> createHindiAirportMission()
             else -> createSpanishAirportMission()
         }
     }
@@ -503,6 +505,68 @@ object MissionRepository {
                 "Order coffee"
             ),
             tip = "In Italy, coffee is usually enjoyed standing at the bar!"
+        )
+    )
+
+    private fun createHindiAirportMission() = MissionData(
+        title = "Arrival in New Delhi",
+        subtitle = "Your first morning in India.",
+        goalDescription = "Find your gate, locate your seat, and order your first chai or coffee.",
+        arrivalCode = "DEL",
+        rewardTitle = "Masala Chai (मसाला चाय)",
+        heroImageRes = R.drawable.sittingarea,
+        packingItems = listOf(
+            PackingItem("1", "पासपोर्ट (Passport)", "Passport", R.drawable.passport, isRequired = true),
+            PackingItem("2", "हेडफोन (Headphones)", "Headphones", R.drawable.headphones, isRequired = true),
+            PackingItem("3", "धूप का चश्मा (Sunglasses)", "Sunglasses", R.drawable.glasses, isRequired = true),
+            PackingItem("4", "पानी की बोतल (Water Bottle)", "Water Bottle", R.drawable.bottles, isRequired = false),
+            PackingItem("5", "पत्रिका (Magazine)", "Magazine", R.drawable.book1, isRequired = false),
+        ),
+        places = listOf(
+            PlaceItem("p1", "हवाई अड्डा (Airport)", "Airport"),
+            PlaceItem("p2", "रेलवे स्टेशन (Railway Station)", "Railway Station"),
+            PlaceItem("p3", "बस स्टॉप (Bus Stop)", "Bus Stop"),
+            PlaceItem("p4", "प्रस्थान (Departures)", "Departures"),
+            PlaceItem("p5", "सामान (Baggage Claim)", "Baggage Claim"),
+        ),
+        announcement = ListeningQuestion(
+            audioText = "दिल्ली जाने वाली उड़ान गेट A24 से प्रस्थान करेगी।",
+            prompt = "Listen carefully. Which gate was announced for the flight?",
+            options = listOf("Gate A24", "Gate B12", "Gate C18", "Gate D05"),
+            correctAnswer = "Gate A24"
+        ),
+        seatChallenge = SeatChallenge(
+            boardingPassSeat = "18A",
+            prompt = "Your boarding pass says 18A. Select your row & seat position.",
+            options = listOf("Row 18 - Window A", "Row 12 - Aisle B", "Row 24 - Middle C", "Row 18 - Aisle D"),
+            correctAnswer = "Row 18 - Window A",
+            vocabulary = listOf(
+                "सीट (Seat)" to "Seat",
+                "पंक्ति (Row)" to "Row",
+                "खिड़की (Window)" to "Window",
+                "गलियारा (Aisle)" to "Aisle"
+            )
+        ),
+        speakingChallenge = SpeakingChallenge(
+            phrase = "एक चाय दीजिए",
+            translation = "One tea please",
+            phoneticHint = "Ek chai dijie",
+            imageRes = R.drawable.coffee
+        ),
+        summary = MissionSummary(
+            title = "Mission Accomplished",
+            subtitle = "You can now handle your first airport morning in Hindi.",
+            wordsCount = 12,
+            phrasesCount = 3,
+            situationsCount = 4,
+            skills = listOf(
+                "Pack your travel essentials",
+                "Understand basic airport signs",
+                "Understand an airport announcement",
+                "Find your seat",
+                "Order tea/coffee"
+            ),
+            tip = "Saying \"Namaste\" with folded hands is a warm greeting in India."
         )
     )
 }

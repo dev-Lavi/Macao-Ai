@@ -57,15 +57,15 @@ class TextToSpeechManagerImpl(private val context: Context) : TextToSpeechManage
         val langPrefix = normalizedLang.split("-").firstOrNull() ?: normalizedLang
 
         val locale = when {
-            normalizedLang.startsWith("ja") || langPrefix == "ja" -> Locale.JAPANESE
-            normalizedLang.startsWith("es") || langPrefix == "es" -> Locale.forLanguageTag("es-ES")
-            normalizedLang.startsWith("fr") || langPrefix == "fr" -> Locale.FRANCE
-            normalizedLang.startsWith("de") || langPrefix == "de" -> Locale.GERMANY
-            normalizedLang.startsWith("it") || langPrefix == "it" -> Locale.ITALIAN
-            normalizedLang.startsWith("pt") || langPrefix == "pt" -> Locale.forLanguageTag("pt-BR")
-            normalizedLang.startsWith("hi") || langPrefix == "hi" -> Locale.forLanguageTag("hi-IN")
-            normalizedLang.startsWith("ko") || langPrefix == "ko" -> Locale.KOREAN
-            normalizedLang.startsWith("zh") || langPrefix == "zh" -> Locale.CHINESE
+            normalizedLang.startsWith("ja") || langPrefix == "ja" || langPrefix == "japanese" -> Locale.JAPANESE
+            normalizedLang.startsWith("es") || langPrefix == "es" || langPrefix == "spanish" -> Locale.forLanguageTag("es-ES")
+            normalizedLang.startsWith("fr") || langPrefix == "fr" || langPrefix == "french" -> Locale.FRANCE
+            normalizedLang.startsWith("de") || langPrefix == "de" || langPrefix == "german" -> Locale.GERMANY
+            normalizedLang.startsWith("it") || langPrefix == "it" || langPrefix == "italian" -> Locale.ITALIAN
+            normalizedLang.startsWith("pt") || langPrefix == "pt" || langPrefix == "portuguese" -> Locale.forLanguageTag("pt-BR")
+            normalizedLang.startsWith("hi") || langPrefix == "hi" || langPrefix == "hindi" -> Locale.forLanguageTag("hi-IN")
+            normalizedLang.startsWith("ko") || langPrefix == "ko" || langPrefix == "korean" -> Locale.KOREAN
+            normalizedLang.startsWith("zh") || langPrefix == "zh" || langPrefix == "chinese" -> Locale.CHINESE
             else -> Locale.US
         }
 

@@ -9,6 +9,17 @@ interface MacaoApiService {
     @GET("users/me")
     suspend fun getProfile(): ApiResponse<UserProfile>
 
+    @GET("users/profile-summary")
+    suspend fun getProfileSummary(): ApiResponse<ProfileSummaryResponse>
+
+    @GET("users/proficiency")
+    suspend fun getProficiency(): ApiResponse<ProfileProficiency>
+
+    @GET("users/analytics")
+    suspend fun getAnalyticsSummary(
+        @Query("languageCode") languageCode: String? = null
+    ): ApiResponse<AnalyticsResponse>
+
     @PATCH("users/me")
     suspend fun updateProfile(
         @Body fields: Map<String, @JvmSuppressWildcards Any>

@@ -1,5 +1,10 @@
 package ai.macao.app.home
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import ai.macao.app.R
 import ai.macao.app.auth.ClashGroteskFontFamily
 import ai.macao.app.home.audio.SpeechRecognizerManager
@@ -59,6 +64,36 @@ fun SituationMissionScreen(
     val context = LocalContext.current
     val ttsManager = remember { TextToSpeechManagerImpl(context) }
     val speechManager = remember { SpeechRecognizerManagerImpl(context) }
+
+    var hasAudioPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    var pendingMicAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasAudioPermission = isGranted
+        if (isGranted) {
+            pendingMicAction?.invoke()
+        }
+        pendingMicAction = null
+    }
+
+    val requestAudioPermissionAndRun: (() -> Unit) -> Unit = { action ->
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            hasAudioPermission = true
+            action()
+        } else {
+            pendingMicAction = action
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -120,6 +155,7 @@ fun SituationMissionScreen(
                     languageCode = languageCode,
                     ttsManager = ttsManager,
                     speechManager = speechManager,
+                    onRequestAudioPermission = requestAudioPermissionAndRun,
                     onNextPlace = {
                         if (currentPlaceIndex < missionData.places.lastIndex) {
                             currentPlaceIndex++
@@ -163,23 +199,24 @@ fun SituationMissionScreen(
                     speechManager = speechManager,
                     onMicClick = {
                         if (speakingState == SpeechPracticeState.IDLE || speakingState == SpeechPracticeState.INCORRECT) {
-                            speakingState = SpeechPracticeState.LISTENING
-                            speechManager.startListening(
-                                languageCode = languageCode,
-                                onPartialResult = { partial ->
-                                    spokenTranscript = partial
-                                },
-                                onFinalResult = { finalResult ->
-                                    spokenTranscript = finalResult
-                                    speakingState = SpeechPracticeState.PROCESSING
-                                    val isMatch = validateBeginnerSpeech(finalResult, missionData.speakingChallenge.phrase)
-                                    speakingState = if (isMatch) SpeechPracticeState.CORRECT else SpeechPracticeState.INCORRECT
-                                },
-                                onError = { errorMsg ->
-                                    // Fallback to simulated success for smooth beginner UX if ASR has issues
-                                    speakingState = SpeechPracticeState.CORRECT
-                                }
-                            )
+                            requestAudioPermissionAndRun {
+                                speakingState = SpeechPracticeState.LISTENING
+                                speechManager.startListening(
+                                    languageCode = languageCode,
+                                    onPartialResult = { partial ->
+                                        spokenTranscript = partial
+                                    },
+                                    onFinalResult = { finalResult ->
+                                        spokenTranscript = finalResult
+                                        speakingState = SpeechPracticeState.PROCESSING
+                                        val isMatch = validateBeginnerSpeech(finalResult, missionData.speakingChallenge.phrase)
+                                        speakingState = if (isMatch) SpeechPracticeState.CORRECT else SpeechPracticeState.INCORRECT
+                                    },
+                                    onError = { errorMsg ->
+                                        speakingState = SpeechPracticeState.INCORRECT
+                                    }
+                                )
+                            }
                         } else if (speakingState == SpeechPracticeState.CORRECT) {
                             currentStepType = SituationStepType.MISSION_COMPLETE
                         }
@@ -214,9 +251,9 @@ private fun validateBeginnerSpeech(spoken: String, target: String): Boolean {
         target.substringAfter("(").substringBefore(")").trim()
     } else ""
 
-    val cleanSpoken = spoken.lowercase().replace(Regex("[^a-z0-9áéíóúñāēīōū\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF\\s]"), "").trim()
-    val cleanPrimary = primaryTarget.lowercase().replace(Regex("[^a-z0-9áéíóúñāēīōū\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF\\s]"), "").trim()
-    val cleanRomaji = romajiTarget.lowercase().replace(Regex("[^a-z0-9áéíóúñāēīōū\\s]"), "").trim()
+    val cleanSpoken = spoken.lowercase().replace(Regex("[^\\p{L}\\p{N}\\s]"), "").trim()
+    val cleanPrimary = primaryTarget.lowercase().replace(Regex("[^\\p{L}\\p{N}\\s]"), "").trim()
+    val cleanRomaji = romajiTarget.lowercase().replace(Regex("[^\\p{L}\\p{N}\\s]"), "").trim()
 
     if (cleanSpoken.isBlank()) return false
 
@@ -228,8 +265,8 @@ private fun validateBeginnerSpeech(spoken: String, target: String): Boolean {
         return true
     }
 
-    val spokenTokens = cleanSpoken.split("\\s+".toRegex()).filter { it.length >= 2 }
-    val targetTokens = (cleanPrimary + " " + cleanRomaji).split("\\s+".toRegex()).filter { it.length >= 2 }
+    val spokenTokens = cleanSpoken.split("\\s+".toRegex()).filter { it.isNotEmpty() }
+    val targetTokens = (cleanPrimary + " " + cleanRomaji).split("\\s+".toRegex()).filter { it.isNotEmpty() }
 
     if (spokenTokens.isEmpty() || targetTokens.isEmpty()) return false
 
@@ -800,6 +837,7 @@ private fun LearnPlacesStep(
     languageCode: String,
     ttsManager: TextToSpeechManager,
     speechManager: SpeechRecognizerManager,
+    onRequestAudioPermission: (() -> Unit) -> Unit,
     onNextPlace: () -> Unit,
     onBackClick: () -> Unit,
 ) {
@@ -970,21 +1008,23 @@ private fun LearnPlacesStep(
                             )
                             .clickable {
                                 if (practiceState == SpeechPracticeState.IDLE || practiceState == SpeechPracticeState.INCORRECT) {
-                                    practiceState = SpeechPracticeState.LISTENING
-                                    spokenTranscript = ""
-                                    speechManager.startListening(
-                                        languageCode = languageCode,
-                                        onPartialResult = { partial -> spokenTranscript = partial },
-                                        onFinalResult = { finalResult ->
-                                            spokenTranscript = finalResult
-                                            practiceState = SpeechPracticeState.PROCESSING
-                                            val isMatch = validateBeginnerSpeech(finalResult, place.targetName ?: "")
-                                            practiceState = if (isMatch) SpeechPracticeState.CORRECT else SpeechPracticeState.INCORRECT
-                                        },
-                                        onError = {
-                                            practiceState = SpeechPracticeState.INCORRECT
-                                        }
-                                    )
+                                    onRequestAudioPermission {
+                                        practiceState = SpeechPracticeState.LISTENING
+                                        spokenTranscript = ""
+                                        speechManager.startListening(
+                                            languageCode = languageCode,
+                                            onPartialResult = { partial -> spokenTranscript = partial },
+                                            onFinalResult = { finalResult ->
+                                                spokenTranscript = finalResult
+                                                practiceState = SpeechPracticeState.PROCESSING
+                                                val isMatch = validateBeginnerSpeech(finalResult, place.targetName ?: "")
+                                                practiceState = if (isMatch) SpeechPracticeState.CORRECT else SpeechPracticeState.INCORRECT
+                                            },
+                                            onError = {
+                                                practiceState = SpeechPracticeState.INCORRECT
+                                            }
+                                        )
+                                    }
                                 }
                             },
                         contentAlignment = Alignment.Center

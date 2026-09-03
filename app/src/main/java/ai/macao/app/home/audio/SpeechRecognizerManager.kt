@@ -146,6 +146,13 @@ class SpeechRecognizerManagerImpl(private val context: Context) : SpeechRecogniz
 
     private fun startRecognitionSession() {
         try {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                Log.e(TAG, "Cannot start recognition session: RECORD_AUDIO permission not granted.")
+                currentOnError?.invoke("Audio permission denied")
+                isListeningActive = false
+                return
+            }
+
             initializeRecognizer()
 
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -187,13 +194,16 @@ class SpeechRecognizerManagerImpl(private val context: Context) : SpeechRecogniz
         val langPrefix = normalizedLang.split("-").firstOrNull() ?: normalizedLang
 
         activeLanguageCode = when {
-            normalizedLang.startsWith("ja") || langPrefix == "ja" -> "ja-JP"
-            normalizedLang.startsWith("es") || langPrefix == "es" -> "es-ES"
-            normalizedLang.startsWith("fr") || langPrefix == "fr" -> "fr-FR"
-            normalizedLang.startsWith("de") || langPrefix == "de" -> "de-DE"
-            normalizedLang.startsWith("ko") || langPrefix == "ko" -> "ko-KR"
-            normalizedLang.startsWith("zh") || langPrefix == "zh" -> "zh-CN"
-            normalizedLang.startsWith("en") || langPrefix == "en" -> "en-US"
+            normalizedLang.startsWith("ja") || langPrefix == "ja" || langPrefix == "japanese" -> "ja-JP"
+            normalizedLang.startsWith("es") || langPrefix == "es" || langPrefix == "spanish" -> "es-ES"
+            normalizedLang.startsWith("fr") || langPrefix == "fr" || langPrefix == "french" -> "fr-FR"
+            normalizedLang.startsWith("de") || langPrefix == "de" || langPrefix == "german" -> "de-DE"
+            normalizedLang.startsWith("it") || langPrefix == "it" || langPrefix == "italian" -> "it-IT"
+            normalizedLang.startsWith("hi") || langPrefix == "hi" || langPrefix == "hindi" -> "hi-IN"
+            normalizedLang.startsWith("pt") || langPrefix == "pt" || langPrefix == "portuguese" -> "pt-BR"
+            normalizedLang.startsWith("ko") || langPrefix == "ko" || langPrefix == "korean" -> "ko-KR"
+            normalizedLang.startsWith("zh") || langPrefix == "zh" || langPrefix == "chinese" -> "zh-CN"
+            normalizedLang.startsWith("en") || langPrefix == "en" || langPrefix == "english" -> "en-US"
             normalizedLang.contains("-") -> languageCode
             else -> "en-US"
         }

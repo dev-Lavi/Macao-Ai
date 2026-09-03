@@ -418,6 +418,7 @@ fun MainAppShell(
                             "en" -> "objects_en_01"
                             "it" -> "objects_it_01"
                             "pt" -> "objects_pt_01"
+                            "hi" -> "objects_hi_01"
                             else -> "jp_n5_intro_01"
                         }
 
@@ -432,20 +433,34 @@ fun MainAppShell(
                         ConversationScreen(
                             viewModel = conversationViewModel,
                             onCancelClick = {
+                                conversationViewModel.saveAndCompleteIfActive()
                                 selectedTab = HomeTab.Home
                                 learningViewModel.loadLevels(langCode)
                             }
                         )
                     }
 
-                    HomeTab.Profile -> AccountScreen(
-                        data          = AccountData(displayName = userName),
-                        selectedTab   = selectedTab,
-                        onTabSelected = { selectedTab = it },
-                    )
+                    HomeTab.Profile -> {
+                        val profileViewModel: ProfileViewModel = viewModel()
+                        ProfileScreen(
+                            viewModel     = profileViewModel,
+                            selectedTab   = selectedTab,
+                            onTabSelected = { selectedTab = it },
+                            onBack        = { selectedTab = HomeTab.Home },
+                        )
+                    }
 
-                    HomeTab.Notification,
                     HomeTab.Chart -> {
+                        val analyticsViewModel: AnalyticsViewModel = viewModel()
+                        AnalyticsScreen(
+                            viewModel     = analyticsViewModel,
+                            selectedTab   = selectedTab,
+                            onTabSelected = { selectedTab = it },
+                            onBack        = { selectedTab = HomeTab.Home },
+                        )
+                    }
+
+                    HomeTab.Notification -> {
                         HomeScreen(
                             userName      = userName,
                             userRepository = userRepository,
