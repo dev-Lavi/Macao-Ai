@@ -282,6 +282,7 @@ fun LanguageSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    placeholder: String = "Search supported languages…",
 ) {
     BasicTextField(
         value         = query,
@@ -310,7 +311,7 @@ fun LanguageSearchBar(
                     Box(modifier = Modifier.weight(1f)) {
                         if (query.isEmpty()) {
                             Text(
-                                text       = "Search from 1242 languages…",
+                                text       = placeholder,
                                 fontFamily = OnboardingFontFamily,
                                 fontSize   = 14.sp,
                                 color      = TextLight,

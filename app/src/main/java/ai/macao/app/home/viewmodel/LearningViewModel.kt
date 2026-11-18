@@ -50,6 +50,9 @@ class LearningViewModel(
     private var activeLevelId: String = ""
     private var activeLessonId: String = ""
 
+    private val _missionDataState = MutableStateFlow<ai.macao.app.home.data.MissionData?>(null)
+    val missionDataState: StateFlow<ai.macao.app.home.data.MissionData?> = _missionDataState.asStateFlow()
+
     /**
      * Loads the levels list for the specified language.
      */
@@ -68,12 +71,51 @@ class LearningViewModel(
     }
 
     /**
-     * Loads the items for a single lesson and starts it.
+     * Loads the items for a single lesson or situation mission and starts it.
      */
     fun startLesson(lessonId: String, languageCode: String, levelId: String) {
         activeLanguageCode = languageCode
         activeLevelId = levelId
         activeLessonId = lessonId
+
+        if (lessonId == "mission_airport_01" || levelId == "level_1_situation" || lessonId.contains("airport")) {
+            viewModelScope.launch {
+                _lessonState.value = LessonUiState.Loading
+                repository.getSituationMissionById(lessonId, languageCode)
+                    .onSuccess { mission ->
+                        _missionDataState.value = mission
+                        val dummyLesson = LessonContentResponse(
+                            id = mission.id,
+                            levelId = levelId,
+                            unitId = "unit_1",
+                            languageCode = languageCode,
+                            title = mission.title,
+                            description = mission.subtitle,
+                            order = mission.order,
+                            category = "Situation Mission",
+                            items = emptyList()
+                        )
+                        _lessonState.value = LessonUiState.Content(lesson = dummyLesson)
+                    }
+                    .onFailure {
+                        val fallback = ai.macao.app.home.data.MissionRepository.getAirportMission(languageCode)
+                        _missionDataState.value = fallback
+                        val dummyLesson = LessonContentResponse(
+                            id = fallback.id,
+                            levelId = levelId,
+                            unitId = "unit_1",
+                            languageCode = languageCode,
+                            title = fallback.title,
+                            description = fallback.subtitle,
+                            order = fallback.order,
+                            category = "Situation Mission",
+                            items = emptyList()
+                        )
+                        _lessonState.value = LessonUiState.Content(lesson = dummyLesson)
+                    }
+            }
+            return
+        }
 
         viewModelScope.launch {
             _lessonState.value = LessonUiState.Loading
@@ -85,6 +127,25 @@ class LearningViewModel(
                     _lessonState.value = LessonUiState.Error(err.localizedMessage ?: "Failed to load lesson.")
                 }
         }
+    }
+
+    /**
+     * Completes a situation-based mission and transitions to completion state.
+     */
+    fun completeSituationMission(xpEarned: Int, accuracy: Double) {
+        viewModelScope.launch {
+            repository.completeSituationMission(
+                missionId = activeLessonId.ifEmpty { "mission_airport_01" },
+                languageCode = activeLanguageCode,
+                score = 100,
+                accuracy = accuracy,
+                timeSpentSeconds = 120
+            )
+        }
+        _lessonState.value = LessonUiState.Completed(
+            xpEarned = xpEarned,
+            accuracy = accuracy
+        )
     }
 
     /**

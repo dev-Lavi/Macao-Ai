@@ -353,6 +353,22 @@ class ConversationViewModel(
         _uiState.update { it.copy(error = null) }
     }
 
+    /**
+     * Completes and saves conversation progress if the session has turns.
+     */
+    fun saveAndCompleteIfActive() {
+        val state = _uiState.value
+        if (state.sessionId.isNotEmpty() && state.history.isNotEmpty() && state.state != ConversationState.COMPLETED) {
+            viewModelScope.launch {
+                try {
+                    repository.completeConversation(state.sessionId, 60)
+                } catch (e: Exception) {
+                    // Suppress error on exit
+                }
+            }
+        }
+    }
+
     override fun onCleared() {
         speechRecognizer.destroy()
         textToSpeech.shutdown()
